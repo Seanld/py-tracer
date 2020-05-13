@@ -66,7 +66,7 @@ class Space:
 
     
 class Object:
-    def __init__(self, position=[0, 0], vertices=[]):
+    def __init__(self, position=[0, 0, 0], vertices=[]):
         self.position = position
         self.vertices = vertices
 
@@ -76,12 +76,13 @@ class Object:
         _absVertices = []
 
         for v in self.vertices:
-            _current = []
+            newV = [
+                self.position[0] + v[0],
+                self.position[1] + v[1],
+                self.position[2] + v[2]
+            ]
 
-            for i in v:
-                _current.append(self.position + i)
-
-            _absVertices.append(_current)
+            _absVertices.append(newV)
         
         return _absVertices
 

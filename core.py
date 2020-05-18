@@ -50,16 +50,11 @@ class Camera:
     def _renderObject(self, objectToRender):
         pass
     # Will iteratively call the render functions of all object instance currently in the space.
-    def render(self, spaceToRender):
-        for _object in spaceToRender.objects:
+    def render(self):
+        for _object in self.objects:
             self._renderObject(self, _object)
 
-    def getViewportPixelX(self, Cx):
-        return (Cx) * ((self.screen.width) / (self.screen.width))
-    def getViewportPixelY(self, Cy):
-        return (Cy) * ((self.viewportHeight) / (self.screen.height))
-    def getViewportPixelZ(self):
-        return self.screenDistance
+    
 
     # Absolute camera movement.
     def moveTo(self, position):
@@ -115,5 +110,11 @@ class Object:
 
 
 
-class Square (Object):
-    pass
+class Sphere (Object):
+    def __init__(self, position, radius):
+        self.position = position
+        self.radius = radius
+    
+    # Check if `ray` intersects with Sphere.
+    def intersect(self, ray):
+        pass

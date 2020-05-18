@@ -1,10 +1,19 @@
 # A very naive and basic project dedicated to making a 3D
-# rendering engine that displays to the screen.
+# rendering engine that displays to the screen, via ray-tracing.
 # |-> Written by Sean Wilkerson @ github.com/Seanld
 
 from math import sin, cos, radians
-import numpy
+from random import randrange
+from string import ascii_letters
+from vectors import Vector2, Vector3
 
+def randomId(length):
+    final = ""
+    
+    for _ in range(length):
+        final += ascii_letters[randrange(0, len(ascii_letters) - 1)]
+
+    return final
 
 
 class Screen:
@@ -18,10 +27,15 @@ class Screen:
 
 
 
+class ImagePlane:
+    def __init__(self, dimensions):
+        pass
+
+
 class Camera:
     # position: physical location of camera.
     # screenDistance: distance of the screen from physical location of the camera.
-    def __init__(self, position=[-20, 0, 0], space=None, screenDistance=10, screenWidth=200, screenHeight=150):
+    def __init__(self, position=[0, 0, -20], space=None, screenDistance=10, screenWidth=200, screenHeight=150):
         self.screen = Screen(screenWidth, screenHeight)
 
         if space == None:
@@ -32,10 +46,20 @@ class Camera:
         self.position = position
         self.screenDistance = screenDistance
 
+    # Renders and individual object; kept separate for readability purposes.
+    def _renderObject(self, objectToRender):
+        pass
     # Will iteratively call the render functions of all object instance currently in the space.
     def render(self, spaceToRender):
         for _object in spaceToRender.objects:
-            pass # Do rendering math here (maybe put rendering math for each object in its definition, and refer separately.)
+            self._renderObject(self, _object)
+
+    def getViewportPixelX(self, Cx):
+        return (Cx) * ((self.screen.width) / (self.screen.width))
+    def getViewportPixelY(self, Cy):
+        return (Cy) * ((self.viewportHeight) / (self.screen.height))
+    def getViewportPixelZ(self):
+        return self.screenDistance
 
     # Absolute camera movement.
     def moveTo(self, position):
@@ -51,10 +75,10 @@ class Camera:
 
 class Space:
     def __init__(self):
-        self.objects = {}
+        self.objects = []
     
-    def addObject(self, id, _object):
-        self.objects[id] = _object
+    def addObject(self, _object):
+        self.objects.append(_object)
     
     def deleteObject(self, id):
         self.objects.pop(id)
@@ -66,9 +90,12 @@ class Space:
 
     
 class Object:
-    def __init__(self, position=[0, 0, 0], vertices=[]):
+    def __init__(self, position=[0, 0, 0], vertices=[], id=""):
         self.position = position
         self.vertices = vertices
+
+        if self.id == "":
+            self.id = randomId(8)
 
     # Objects' vertices are relative to its position. To get absolute
     # vertices in relation to the space, use this method.
@@ -89,5 +116,4 @@ class Object:
 
 
 class Square (Object):
-    def render(self):
-        pass
+    pass

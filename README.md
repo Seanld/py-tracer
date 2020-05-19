@@ -1,7 +1,7 @@
-# graphics-library
+# py-tracer
 
-Super basic 3D graphics engine I'm writing as a pastime. Probably
-won't work correctly for quite a while.
+A super basic ray tracer that I'm implementing in Python for kicks and giggles. Probably
+won't work right for a little while.
 
 Not that anyone but me will care.
 

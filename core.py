@@ -134,6 +134,7 @@ class Sphere (Object):
 
         # Distance from ray's origin (camera position likely), to position of sphere.
         distOriginToSphere: Vector3 = ray.origin - self.position
+        distOriginToSphere = distOriginToSphere.asList()
 
         # d.d -- Vector dot-product of the direction.
         A: float = dot(rayAsList, rayAsList)

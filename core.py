@@ -6,6 +6,7 @@ from math import sin, cos, radians
 from random import randrange
 from string import ascii_letters
 from vectors import Vector2, Vector3
+from numpy import dot
 
 def randomId(length):
     final = ""
@@ -110,11 +111,11 @@ class Object:
 
 
 
-class Sphere (Object):
-    def __init__(self, position, radius):
-        self.position = position
-        self.radius = radius
+class Ray:
+    def __init__(self, origin: Vector3, direction: Vector3):
+        self.origin = origin
+        self.direction = direction
     
-    # Check if `ray` intersects with Sphere.
-    def intersect(self, ray):
-        pass
+    # Return list-form of directional vector (for dot product via Numpy).
+    def asList(self):
+        return [self.direction.x, self.direction.y, self.direction.z]

@@ -27,10 +27,6 @@ class Vector3:
         return sqrt(pow((self.x - other.x), 2) + pow((self.y - other.y), 2) + pow((self.z - other.z), 2))
 
     def __add__(self, otherVector):
-        self.x += otherVector.x
-        self.y += otherVector.y
-        self.z += otherVector.z
+        return Vector3(self.x + otherVector.x, self.y + otherVector.y, self.z + otherVector.z)
     def __sub__(self, otherVector):
-        self.x -= otherVector.x
-        self.y -= otherVector.y
-        self.z -= otherVector.z
+        return Vector3(self.x - otherVector.x, self.y - otherVector.y, self.z - otherVector.z)

@@ -8,7 +8,7 @@ from string import ascii_letters
 from vectors import Vector2, Vector3
 from numpy import dot
 
-def randomId(length):
+def randomId(length) -> str:
     final = ""
     
     for _ in range(length):
@@ -77,7 +77,13 @@ class Space:
         self.objects.append(_object)
     
     def deleteObject(self, id):
-        self.objects.pop(id)
+        i = 0
+
+        while i < (len(self.objects) - 1):
+            current = self.objects[i]
+
+            if current.id == id:
+                self.objects = self.objects[:i] + self.objects[i+1:]
 
     # aPos is starting location, bPos is destination/testing location.
     def checkCollision(self, aPos, bPos):
@@ -95,7 +101,7 @@ class Object:
 
     # Objects' vertices are relative to its position. To get absolute
     # vertices in relation to the space, use this method.
-    def absoluteVertices(self):
+    def absoluteVertices(self) -> list:
         _absVertices = []
 
         for v in self.vertices:
@@ -117,5 +123,34 @@ class Ray:
         self.direction = direction
     
     # Return list-form of directional vector (for dot product via Numpy).
-    def asList(self):
+    def asList(self) -> list:
         return [self.direction.x, self.direction.y, self.direction.z]
+
+        
+
+class Sphere (Object):
+    def __init__(self, position: Vector3, radius: float):
+        self.position = position
+        self.radius = radius
+    
+    # Check if `ray` intersects with Sphere.
+    def intersect(self, ray) -> bool:
+        rayAsList: list = ray.asList()
+
+        # Distance from ray's origin (camera position likely), to position of sphere.
+        distOriginToSphere: Vector3 = ray.origin - self.position
+
+        # d.d -- Vector dot-product of the direction.
+        A: float = dot(rayAsList, rayAsList)
+        # 2d.(p0 - c)
+        B: float = 2 * dot(rayAsList, distOriginToSphere)
+        # (p0 - c).(p0 - c) - r^2
+        C: float = dot(distOriginToSphere, distOriginToSphere) - (self.radius ** 2)
+
+        # The discriminant.
+        discrim: float = B * B - 4 * A * C
+
+        if discrim < 0:
+            return False
+        else:
+            return True

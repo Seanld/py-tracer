@@ -7,6 +7,7 @@ from random import randrange
 from string import ascii_letters
 from vectors import Vector2, Vector3
 from numpy import dot
+from typing import List
 
 def randomId(length) -> str:
     final = ""
@@ -33,42 +34,6 @@ class ImagePlane:
         pass
 
 
-class Camera:
-    # position: physical location of camera.
-    # screenDistance: distance of the screen from physical location of the camera.
-    def __init__(self, position=[0, 0, -20], space=None, screenDistance=10, screenWidth=200, screenHeight=150):
-        self.screen = Screen(screenWidth, screenHeight)
-
-        if space == None:
-            self.space = Space()
-        else:
-            self.space = space
-
-        self.position = position
-        self.screenDistance = screenDistance
-
-    # Renders and individual object; kept separate for readability purposes.
-    def _renderObject(self, objectToRender):
-        pass
-    # Will iteratively call the render functions of all object instance currently in the space.
-    def render(self):
-        for _object in self.objects:
-            self._renderObject(self, _object)
-
-    
-
-    # Absolute camera movement.
-    def moveTo(self, position):
-        self.position = position
-    
-    # Relative camera movement.
-    def moveBy(self, increment):
-        self.position[0] += increment[0]
-        self.position[1] += increment[1]
-        self.position[2] += increment[2]
-
-
-
 class Space:
     def __init__(self):
         self.objects = []
@@ -90,9 +55,43 @@ class Space:
         pass
 
 
+class Camera:
+    # position: physical location of camera.
+    # screenDistance: distance of the screen from physical location of the camera.
+    def __init__(self, position: Vector3 = Vector3(), space: Space= None,
+        screenDistance: float = 10, screenWidth: float = 200, screenHeight: float = 150):
+        self.screen = Screen(screenWidth, screenHeight)
+
+        if space == None:
+            self.space = Space()
+        else:
+            self.space = space
+
+        self.position = position
+        self.screenDistance = screenDistance
+
+    # Renders and individual object; kept separate for readability purposes.
+    def _renderObject(self, objectToRender):
+        pass
+    # Will iteratively call the render functions of all object instance currently in the space.
+    def render(self):
+        for _object in self.objects:
+            self._renderObject(self, _object)
+
+    
+
+    # Absolute camera movement.
+    def moveTo(self, position: Vector3):
+        self.position = position
+    
+    # Relative camera movement.
+    def moveBy(self, increment: Vector3):
+        self.position += increment
+
+
     
 class Object:
-    def __init__(self, position=[0, 0, 0], vertices=[], id=""):
+    def __init__(self, position: Vector3 = Vector3(), vertices: List[Vector3] = [], id=""):
         self.position = position
         self.vertices = vertices
 
@@ -101,17 +100,13 @@ class Object:
 
     # Objects' vertices are relative to its position. To get absolute
     # vertices in relation to the space, use this method.
-    def absoluteVertices(self) -> list:
+    def absoluteVertices(self) -> List[Vector3]:
         _absVertices = []
 
         for v in self.vertices:
-            newV = [
-                self.position[0] + v[0],
-                self.position[1] + v[1],
-                self.position[2] + v[2]
-            ]
+            temp = Vector3(self.position.x + v.x, self.position.y + v.y, self.position.z + v.z)
 
-            _absVertices.append(newV)
+            _absVertices.append(temp)
         
         return _absVertices
 
@@ -126,7 +121,7 @@ class Ray:
     def asList(self) -> list:
         return [self.direction.x, self.direction.y, self.direction.z]
 
-        
+
 
 class Sphere (Object):
     def __init__(self, position: Vector3, radius: float):

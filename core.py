@@ -18,20 +18,35 @@ def randomId(length) -> str:
     return final
 
 
-class Screen:
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.buffer = [[0] * width] * height
-
-    def paint(self, x, y, value):
-        self.buffer[y][x] = value
-
-
-
 class ImagePlane:
-    def __init__(self, dimensions):
-        pass
+    # position: center of the plane
+    # resolution: how many pixels wide and tall the plane is
+    def __init__(self, position: Vector3, size: Vector2, resolution = None):
+        self.position = position
+        if resolution == None:
+            self.resolution = size
+        else:
+            self.resolution = resolution
+        self.size = size
+        self.pixelSize = Vector2(size.x / self.resolution.x, size.y / self.resolution.y)
+    
+    def getPixelPositions(self) -> List[Vector3]:
+        Y = (self.position.y - (self.size.x / 2)) + (self.pixelSize.x / 2)
+        Z = (self.position.z + (self.size.y / 2)) - (self.pixelSize.y / 2)
+        startingPoint = Vector3(self.position.x, Y, Z)
+
+        pixelPositions: List[List[Vector3]] = []
+
+        for z in range(self.resolution.y):
+            row: List[Vector3] = []
+
+            for y in range(self.resolution.x):
+                temp = Vector3(0, startingPoint.y + (y * self.pixelSize.x), startingPoint.z - (z * self.pixelSize.y))
+                row.append(temp)
+            
+            pixelPositions.append(row)
+        
+        return pixelPositions
 
 
 class Space:
@@ -59,9 +74,8 @@ class Camera:
     # position: physical location of camera.
     # screenDistance: distance of the screen from physical location of the camera.
     def __init__(self, position: Vector3 = Vector3(), space: Space= None,
-        screenDistance: float = 10, screenWidth: float = 200, screenHeight: float = 150):
-        self.screen = Screen(screenWidth, screenHeight)
-
+        screenDistance: float = 10, screenRes: Vector2 = Vector2(100, 100),
+        screenSize: Vector2 = Vector2(100, 100)):
         if space == None:
             self.space = Space()
         else:
@@ -69,6 +83,8 @@ class Camera:
 
         self.position = position
         self.screenDistance = screenDistance
+        self.buffer = [[0] * screenRes.x] * screenRes.y
+        self.screen = ImagePlane(Vector3(self.position.x + self.screenDistance, self.position.y, self.position.z), screenSize, screenRes)
 
     # Renders and individual object; kept separate for readability purposes.
     def _renderObject(self, objectToRender):
@@ -83,11 +99,12 @@ class Camera:
     # Absolute camera movement.
     def moveTo(self, position: Vector3):
         self.position = position
+        self.screen.position = Vector3(self.position.x + self.screenDistance, self.position.y, self.position.z)
     
     # Relative camera movement.
     def moveBy(self, increment: Vector3):
         self.position += increment
-
+        self.screen.position = Vector3(self.position.x + self.screenDistance, self.position.y, self.position.z)
 
     
 class Object:
@@ -116,10 +133,6 @@ class Ray:
     def __init__(self, origin: Vector3, direction: Vector3):
         self.origin = origin
         self.direction = direction
-    
-    # Return list-form of directional vector (for dot product via Numpy).
-    def asList(self) -> list:
-        return [self.direction.x, self.direction.y, self.direction.z]
 
 
 
@@ -130,11 +143,13 @@ class Sphere (Object):
     
     # Check if `ray` intersects with Sphere.
     def intersect(self, ray) -> bool:
-        rayAsList: list = ray.asList()
-
+        rayAsList: list = ray.direction.asList()
+        
         # Distance from ray's origin (camera position likely), to position of sphere.
         distOriginToSphere: Vector3 = ray.origin - self.position
         distOriginToSphere = distOriginToSphere.asList()
+
+        print(distOriginToSphere)
 
         # d.d -- Vector dot-product of the direction.
         A: float = dot(rayAsList, rayAsList)

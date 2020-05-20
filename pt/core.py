@@ -5,7 +5,7 @@
 from math import sin, cos, radians, sqrt
 from random import randrange
 from string import ascii_letters
-from vectors import Vector2, Vector3
+from .vectors import Vector2, Vector3
 from numpy import dot
 from typing import List
 
@@ -42,6 +42,11 @@ class ImagePlane:
 
             for y in range(self.resolution.x):
                 temp = Vector3(self.position.x, startingPoint.y + (y * self.pixelSize.x), startingPoint.z - (z * self.pixelSize.y))
+
+                clone = temp.y
+                temp.y = temp.x
+                temp.x = clone
+
                 row.append(temp)
             
             pixelPositions.append(row)
@@ -83,7 +88,8 @@ class Camera:
 
         self.position = position
         self.screenDistance = screenDistance
-        self.buffer = [[0] * screenRes.x] * screenRes.y
+        self.buffer = []
+        # self.vertices: List[str] = []
         self.screen = ImagePlane(Vector3(self.position.x + self.screenDistance, self.position.y, self.position.z), screenSize, screenRes)
 
     # Renders and individual object; kept separate for readability purposes.
@@ -94,19 +100,27 @@ class Camera:
         y = 0
         x = 0
 
+        finalBuffer = []
+
         for column in allPixelPositions:
+            currentColumn = []
+
             for pixelPosition in column:
                 ray.direction = pixelPosition
                 
-                # print(ray.direction.x, ray.direction.y, ray.direction.z)
+                intersectResult = objectToRender.intersect(ray)
 
-                if objectToRender.intersect(ray) != None:
-                    self.buffer[y][x] = 1
-
-                x += 1
+                if intersectResult != None:
+                    currentColumn.append(1)
+                else:
+                    currentColumn.append(0)
+                
+                # THIS WAS FOR DEBUGGING, KEEPING IN CASE I NEED IT IN THE FUTURE!
+                # self.vertices.append("({x}, {y}, {z} = {result}; ({pixelX}, {pixelY}))\n".format(x=pixelPosition.x, y=pixelPosition.y, z=pixelPosition.z, result=intersectResult, pixelX=x, pixelY=y))
             
-            x = 0
-            y += 1
+            finalBuffer.append(currentColumn)
+        
+        self.buffer = finalBuffer
 
     # Will iteratively call the render functions of all object instances currently in the space.
     def render(self):
@@ -162,26 +176,23 @@ class Sphere (Object):
     
     # Check if `ray` intersects with Sphere.
     def intersect(self, ray: Ray) -> bool:
-        dist: List[float] = (ray.origin - self.position).asList()
+        dist = self.position - ray.origin
 
-        a: float = dot(ray.direction.asList(), ray.direction.asList())
-        b: float = 2 * dot(dist, ray.direction.asList())
-        c: float = dot(dist, dist) - self.radius * self.radius
+        a = dot(ray.direction.asList(), ray.direction.asList())
+        b = 2 * dot(ray.direction.asList(), dist.asList())
+        c = dot(dist.asList(), dist.asList()) - (self.radius ** 2)
 
-        discrim: float = b * b - 4 * a * c
+        #print(a, b, c)
+
+        discrim = b * b - 4 * a * c
 
         if discrim < 0:
             return None
+        
+        if discrim == 0:
+            return print("GLANCE!")
 
-        else:
-            numerator: float = -b - sqrt(discrim)
+        t1 = (-b + sqrt(discrim)) / (2 * a)
+        t2 = (-b - sqrt(discrim)) / (2 * a)
 
-            if numerator > 0:
-                return numerator / (2.0 * a)
-
-            numerator = -b + sqrt(discrim)
-
-            if numerator > 0:
-                return numerator / (2.0 * a)
-            else:
-                return None
+        return (t1, t2)

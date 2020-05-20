@@ -2,7 +2,7 @@
 # rendering engine that displays to the screen, via ray-tracing.
 # |-> Written by Sean Wilkerson @ github.com/Seanld
 
-from math import sin, cos, radians
+from math import sin, cos, radians, sqrt
 from random import randrange
 from string import ascii_letters
 from vectors import Vector2, Vector3
@@ -30,7 +30,7 @@ class ImagePlane:
         self.size = size
         self.pixelSize = Vector2(size.x / self.resolution.x, size.y / self.resolution.y)
     
-    def getPixelPositions(self) -> List[Vector3]:
+    def getPixelPositions(self) -> List[List[Vector3]]:
         Y = (self.position.y - (self.size.x / 2)) + (self.pixelSize.x / 2)
         Z = (self.position.z + (self.size.y / 2)) - (self.pixelSize.y / 2)
         startingPoint = Vector3(self.position.x, Y, Z)
@@ -41,7 +41,7 @@ class ImagePlane:
             row: List[Vector3] = []
 
             for y in range(self.resolution.x):
-                temp = Vector3(0, startingPoint.y + (y * self.pixelSize.x), startingPoint.z - (z * self.pixelSize.y))
+                temp = Vector3(self.position.x, startingPoint.y + (y * self.pixelSize.x), startingPoint.z - (z * self.pixelSize.y))
                 row.append(temp)
             
             pixelPositions.append(row)
@@ -73,7 +73,7 @@ class Space:
 class Camera:
     # position: physical location of camera.
     # screenDistance: distance of the screen from physical location of the camera.
-    def __init__(self, position: Vector3 = Vector3(), space: Space= None,
+    def __init__(self, position: Vector3 = Vector3(), space: Space = None,
         screenDistance: float = 10, screenRes: Vector2 = Vector2(100, 100),
         screenSize: Vector2 = Vector2(100, 100)):
         if space == None:
@@ -88,11 +88,30 @@ class Camera:
 
     # Renders and individual object; kept separate for readability purposes.
     def _renderObject(self, objectToRender):
-        pass
-    # Will iteratively call the render functions of all object instance currently in the space.
+        allPixelPositions: List[List[Vector3]] = self.screen.getPixelPositions()
+        ray: Ray = Ray(self.position, Vector3(0, 0, 0))
+
+        y = 0
+        x = 0
+
+        for column in allPixelPositions:
+            for pixelPosition in column:
+                ray.direction = pixelPosition
+                
+                # print(ray.direction.x, ray.direction.y, ray.direction.z)
+
+                if objectToRender.intersect(ray) != None:
+                    self.buffer[y][x] = 1
+
+                x += 1
+            
+            x = 0
+            y += 1
+
+    # Will iteratively call the render functions of all object instances currently in the space.
     def render(self):
-        for _object in self.objects:
-            self._renderObject(self, _object)
+        for _object in self.space.objects:
+            self._renderObject(_object)
 
     
 
@@ -142,26 +161,27 @@ class Sphere (Object):
         self.radius = radius
     
     # Check if `ray` intersects with Sphere.
-    def intersect(self, ray) -> bool:
-        rayAsList: list = ray.direction.asList()
-        
-        # Distance from ray's origin (camera position likely), to position of sphere.
-        distOriginToSphere: Vector3 = ray.origin - self.position
-        distOriginToSphere = distOriginToSphere.asList()
+    def intersect(self, ray: Ray) -> bool:
+        dist: List[float] = (ray.origin - self.position).asList()
 
-        print(distOriginToSphere)
+        a: float = dot(ray.direction.asList(), ray.direction.asList())
+        b: float = 2 * dot(dist, ray.direction.asList())
+        c: float = dot(dist, dist) - self.radius * self.radius
 
-        # d.d -- Vector dot-product of the direction.
-        A: float = dot(rayAsList, rayAsList)
-        # 2d.(p0 - c)
-        B: float = 2 * dot(rayAsList, distOriginToSphere)
-        # (p0 - c).(p0 - c) - r^2
-        C: float = dot(distOriginToSphere, distOriginToSphere) - (self.radius ** 2)
-
-        # The discriminant.
-        discrim: float = B * B - 4 * A * C
+        discrim: float = b * b - 4 * a * c
 
         if discrim < 0:
-            return False
+            return None
+
         else:
-            return True
+            numerator: float = -b - sqrt(discrim)
+
+            if numerator > 0:
+                return numerator / (2.0 * a)
+
+            numerator = -b + sqrt(discrim)
+
+            if numerator > 0:
+                return numerator / (2.0 * a)
+            else:
+                return None

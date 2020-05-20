@@ -82,14 +82,12 @@ class Camera:
         self.position = position
         self.screenDistance = screenDistance
         self.screenRes = screenRes
-        self.buffer = [[0] * screenRes.y] * screenRes.x
+        self.buffer = [[0] * screenRes.x] * screenRes.y
         # self.vertices: List[str] = []
         self.screen = ImagePlane(Vector3(self.position.x + self.screenDistance, self.position.y, self.position.z), screenSize, screenRes)
 
     # Renders and individual object; kept separate for readability purposes.
     def _renderObject(self, objectToRender):
-        print("CHANGING")
-
         allPixelPositions: List[List[Vector3]] = self.screen.getPixelPositions()
         ray: Ray = Ray(self.position, Vector3(0, 0, 0))
 
@@ -106,14 +104,17 @@ class Camera:
                 ray.direction = pixelPosition
                 
                 intersectResult = objectToRender.intersect(ray)
-
-                if self.buffer[y][x] == 1:
-                    currentColumn.append(1)
-                else:
-                    if intersectResult != None:
+                
+                try:
+                    if self.buffer[y][x] == 1:
                         currentColumn.append(1)
                     else:
-                        currentColumn.append(0)
+                        if intersectResult != None:
+                            currentColumn.append(1)
+                        else:
+                            currentColumn.append(0)
+                except IndexError:
+                    print(x, y)
                 
                 x += 1
                 

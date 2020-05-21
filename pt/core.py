@@ -11,6 +11,13 @@ from typing import List
 
 
 
+class Color:
+    def __init__(self, r=0, g=0, b=0):
+        self.r = r
+        self.g = g
+        self.b = b
+        self.rgb = (r, g, b)
+
 class ImagePlane:
     # position: center of the plane
     # resolution: how many pixels wide and tall the plane is
@@ -73,7 +80,7 @@ class Camera:
     # screenDistance: distance of the screen from physical location of the camera.
     def __init__(self, position: Vector3 = Vector3(), space: Space = None,
         screenDistance: float = 10, screenRes: Vector2 = Vector2(100, 100),
-        screenSize: Vector2 = Vector2(100, 100)):
+        screenSize: Vector2 = Vector2(100, 100), bg = Color()):
         if space == None:
             self.space = Space()
         else:
@@ -82,9 +89,10 @@ class Camera:
         self.position = position
         self.screenDistance = screenDistance
         self.screenRes = screenRes
-        self.buffer = [[0] * screenRes.x] * screenRes.y
+        self.buffer = [[bg] * screenRes.x] * screenRes.y
         # self.vertices: List[str] = []
         self.screen = ImagePlane(Vector3(self.position.x + self.screenDistance, self.position.y, self.position.z), screenSize, screenRes)
+        self.bg = bg
 
     # Renders and individual object; kept separate for readability purposes.
     def _renderObject(self, objectToRender):
@@ -104,18 +112,14 @@ class Camera:
                 ray.direction = pixelPosition
                 
                 intersectResult = objectToRender.intersect(ray)
+
+                currentData = self.buffer[y][x]
                 
-                try:
-                    if self.buffer[y][x] == 1:
-                        currentColumn.append(1)
-                    else:
-                        if intersectResult != None:
-                            currentColumn.append(1)
-                        else:
-                            currentColumn.append(0)
-                except IndexError:
-                    print(x, y)
+                if intersectResult != None:
+                    currentData = objectToRender.color
                 
+                currentColumn.append(currentData)
+
                 x += 1
                 
                 # THIS WAS FOR DEBUGGING, KEEPING IN CASE I NEED IT IN THE FUTURE!
@@ -177,9 +181,10 @@ class Ray:
 
 
 class Sphere (Object):
-    def __init__(self, position: Vector3, radius: float):
+    def __init__(self, position: Vector3, radius: float, color=Color()):
         self.position = position
         self.radius = radius
+        self.color = color
     
     # Check if `ray` intersects with Sphere.
     def intersect(self, ray: Ray) -> bool:

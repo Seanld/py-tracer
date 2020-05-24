@@ -17,6 +17,13 @@ class Vector2:
 
     def asList(self) -> List[float]:
         return [self.x, self.y]
+    
+    def __repr__(self):
+        return "<{x},{y}>".format(x=self.x, y=self.y)
+    
+    # Compares two Vector2 object positions.
+    def compare(self, otherVector):
+        return self.x == otherVector.x and self.y == otherVector.y
 
 class Vector3:
     def __init__(self, x=0, y=0, z=0):
@@ -35,3 +42,9 @@ class Vector3:
 
     def asList(self) -> List[float]:
         return [self.x, self.y, self.z]
+
+    def __repr__(self):
+        return "<{x},{y},{z}>".format(x=self.x, y=self.y, z=self.z)
+    
+    def compare(self, otherVector):
+        return self.x == otherVector.x and self.y == otherVector.y and self.z == otherVector.z
